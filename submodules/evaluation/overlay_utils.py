@@ -2,6 +2,7 @@
 
 """Utility functions for segmentation tasks."""
 
+from builtins import range
 from PIL import Image
 import scipy.ndimage
 import numpy as np

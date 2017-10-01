@@ -65,11 +65,8 @@ except ImportError:
 
 flags.DEFINE_string('logdir', None,
                     'Path to logdir.')
-flags.DEFINE_string('input_images', None,
-                    'Images to apply KittiSeg.')
-flags.DEFINE_string('output_image', None,
-                    'Image to apply KittiSeg.')
-
+flags.DEFINE_string('basedir', None,
+                    'Path to base directory.')
 
 default_run = 'KittiSeg_pretrained'
 weights_url = ("ftp://mi.eng.cam.ac.uk/"
@@ -106,13 +103,6 @@ def resize_label_image(image, gt_image, image_height, image_width):
 def main(_):
     tv_utils.set_gpus_to_use()
 
-    if FLAGS.input_images is None:
-        logging.error("No input_images were given.")
-        logging.info(
-            "Usage: python demo.py --input_images data/test.png "
-            "[--output_image output_image] [--logdir /path/to/weights] "
-            "[--gpus GPUs_to_use] ")
-        exit(1)
 
     if FLAGS.logdir is None:
         # Download and use weights from the MultiNet Paper
@@ -157,8 +147,23 @@ def main(_):
 
         logging.info("Weights loaded successfully.")
 
-    input_images = FLAGS.input_images.split(',')
-    logging.info("Starting inference using {} as input".format(input_images))
+    # Let us gather all the input images
+    base_folder = FLAGS.basedir
+
+    sub_folders = ["2011_09_26"]
+    input_images = []
+    for sub_folder in sub_folders:
+        for folder in os.listdir(os.path.join(base_folder, sub_folder)):
+            sync_folder = os.path.join(base_folder, sub_folder, folder)
+            if not os.path.isdir(sync_folder):
+                continue
+
+            image_folder = os.path.join(sync_folder, "image_03", "data")
+            for file in os.listdir(image_folder):
+                if "_raw" not in file and "_pred" not in file:
+                    input_images.append(os.path.join(image_folder, file))
+
+    logging.info("Starting inference using {} many inputs".format(len(input_images)))
 
     for input_image in input_images:
         # Load and resize input image
@@ -180,7 +185,7 @@ def main(_):
         output_image = output[0][:, 1].reshape(shape[0], shape[1])
 
         # Plot confidences as red-blue overlay
-        rb_image = seg.make_overlay(image, output_image)
+        # rb_image = seg.make_overlay(image, output_image)
 
         # Accept all pixel with conf >= 0.5 as positive prediction
         # This creates a `hard` prediction result for class street
@@ -188,33 +193,27 @@ def main(_):
         street_prediction = output_image > threshold
 
         # Plot the hard prediction as green overlay
-        green_image = tv_utils.fast_overlay(image, street_prediction)
+        # green_image = tv_utils.fast_overlay(image, street_prediction)
 
         # Save output images to disk.
-        if FLAGS.output_image is None:
-            output_base_name = input_image
-        else:
-            output_base_name = FLAGS.output_image
-
-        output_base_name = output_base_name.split('.')
+        output_base_name = input_image.split('.')
         output_base_name_new = ""
         for i in range(len(output_base_name) -1):
             output_base_name_new += output_base_name[i] + '.'
+        output_base_name_new = output_base_name_new[:-1]
         raw_image_name = output_base_name_new + '_raw.png'
-        rb_image_name = output_base_name_new + '_rb.png'
-        green_image_name = output_base_name_new + '_green.png'
+        pred_image_name = output_base_name_new + '_pred.png'
+        # rb_image_name = output_base_name_new + '_rb.png'
+        # green_image_name = output_base_name_new + '_green.png'
 
         scp.misc.imsave(raw_image_name, output_image)
-        scp.misc.imsave(rb_image_name, rb_image)
-        scp.misc.imsave(green_image_name, green_image)
+        scp.misc.imsave(pred_image_name, street_prediction)
+        # scp.misc.imsave(rb_image_name, rb_image)
+        # scp.misc.imsave(green_image_name, green_image)
 
         logging.info("")
         logging.info("Raw output image has been saved to: {}".format(
             os.path.realpath(raw_image_name)))
-        logging.info("Red-Blue overlay of confs have been saved to: {}".format(
-            os.path.realpath(rb_image_name)))
-        logging.info("Green plot of predictions have been saved to: {}".format(
-            os.path.realpath(green_image_name)))
 
 
 

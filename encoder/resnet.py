@@ -8,6 +8,7 @@ Modified Work: Copyright (c) 2017 Marvin Teichmann
 
 For details see 'licenses/RESNET_LICENSE.txt'
 """
+from builtins import range
 import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.training import moving_averages

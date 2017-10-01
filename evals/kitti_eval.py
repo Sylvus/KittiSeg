@@ -6,6 +6,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from builtins import range
 import os
 import numpy as np
 import scipy as scp
@@ -21,7 +22,7 @@ import tensorvision.utils as utils
 
 def eval_image(hypes, gt_image, cnn_image):
     """."""
-    thresh = np.array(range(0, 256))/255.0
+    thresh = np.array(list(range(0, 256)))/255.0
 
     road_color = np.array(hypes['data']['road_color'])
     background_color = np.array(hypes['data']['background_color'])
@@ -57,7 +58,7 @@ def evaluate(hypes, sess, image_pl, inf_out):
         data_file = os.path.join(data_dir, data_file)
         image_dir = os.path.dirname(data_file)
 
-        thresh = np.array(range(0, 256))/255.0
+        thresh = np.array(list(range(0, 256)))/255.0
         total_fp = np.zeros(thresh.shape)
         total_fn = np.zeros(thresh.shape)
         total_posnum = 0
@@ -136,7 +137,7 @@ def evaluate(hypes, sess, image_pl, inf_out):
 
         if phase == 'val':
             start_time = time.time()
-            for i in xrange(10):
+            for i in range(10):
                 sess.run([softmax], feed_dict=feed_dict)
             dt = (time.time() - start_time)/10
 

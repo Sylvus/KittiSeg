@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from builtins import zip
 import logging
 import sys
 import tensorflow as tf
@@ -77,10 +78,10 @@ def training(hypes, loss, global_step, learning_rate, opt=None):
         grads_and_vars = opt.compute_gradients(total_loss)
 
         if hypes['clip_norm'] > 0:
-            grads, tvars = zip(*grads_and_vars)
+            grads, tvars = list(zip(*grads_and_vars))
             clip_norm = hypes["clip_norm"]
             clipped_grads, norm = tf.clip_by_global_norm(grads, clip_norm)
-            grads_and_vars = zip(clipped_grads, tvars)
+            grads_and_vars = list(zip(clipped_grads, tvars))
 
         train_op = opt.apply_gradients(grads_and_vars, global_step=global_step)
 

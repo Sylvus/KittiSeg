@@ -15,6 +15,9 @@
 #           Jannik Fritsch <jannik.fritsch@honda-ri.de>
 #
 
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import numpy as np
 # import pylab
 import matplotlib.cm as cm
@@ -40,7 +43,7 @@ def overlayImageWithConfidence(in_image, conf, vis_channel = 1, threshold = 0.5)
     :param threshold:
     '''
     if in_image.dtype == 'uint8':
-        visImage = in_image.copy().astype('f4')/255
+        visImage = old_div(in_image.copy().astype('f4'),255)
     else:
         visImage = in_image.copy()
     
@@ -116,11 +119,11 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh =
     valid = (totalTP>=0) & (totalTN>=0)
     assert valid.all(), 'Detected invalid elements in eval'
 
-    recall = totalTP / float( totalPosNum )
-    TNR    = totalTN / float( totalNegNum )
-    precision =  totalTP / (totalTP + totalFP + 1e-10)
+    recall = old_div(totalTP, float( totalPosNum ))
+    TNR    = old_div(totalTN, float( totalNegNum ))
+    precision =  old_div(totalTP, (totalTP + totalFP + 1e-10))
 
-    accuracy = (totalTP + totalTN) / (float( totalPosNum ) + float( totalNegNum ))
+    accuracy = old_div((totalTP + totalTN), (float( totalPosNum ) + float( totalNegNum )))
     
     selector_invalid = (recall==0) & (precision==0)
     recall = recall[~selector_invalid]
@@ -138,7 +141,7 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh =
         pmax = max(precision[ind])
         AvgPrec += pmax
         counter += 1
-    AvgPrec = AvgPrec/counter
+    AvgPrec = old_div(AvgPrec,counter)
     
     
     # F-measure operation point
@@ -198,16 +201,16 @@ def calcEvalMeasures(evalDict, tag  = '_wp'):
     TN = evalDict[:,1].astype('f4')
     FP = evalDict[:,2].astype('f4')
     FN = evalDict[:,3].astype('f4')
-    Q = TP / (TP + FP + FN)
+    Q = old_div(TP, (TP + FP + FN))
     P = TP + FN
     N = TN + FP
-    TPR = TP / P
-    FPR = FP / N
-    FNR = FN / P
-    TNR = TN / N
-    A = (TP + TN) / (P + N)
-    precision = TP / (TP + FP)
-    recall = TP / P
+    TPR = old_div(TP, P)
+    FPR = old_div(FP, N)
+    FNR = old_div(FN, P)
+    TNR = old_div(TN, N)
+    A = old_div((TP + TN), (P + N))
+    precision = old_div(TP, (TP + FP))
+    recall = old_div(TP, P)
     #numSamples = TP + TN + FP + FN
     correct_rate = A
 
@@ -343,7 +346,7 @@ def saveBEVImageWithAxes(data, outputname, cmap = None, xlabel = 'x [m]', ylabel
     :param outputname:
     :param cmap:
     '''
-    aspect_ratio = float(data.shape[1])/data.shape[0]
+    aspect_ratio = old_div(float(data.shape[1]),data.shape[0])
     fig = pylab.figure()
     Scale = 8
     # add +1 to get axis text
@@ -365,7 +368,7 @@ def saveBEVImageWithAxes(data, outputname, cmap = None, xlabel = 'x [m]', ylabel
         
     modBev_plot(ax, rangeX, rangeXpx, numDeltaX, rangeZ, rangeZpx, numDeltaZ, fontSize, xlabel = xlabel, ylabel = ylabel)
     #plt.savefig(outputname, bbox_inches='tight', dpi = dpi)
-    pylab.savefig(outputname, dpi = data.shape[0]/Scale)
+    pylab.savefig(outputname, dpi = old_div(data.shape[0],Scale))
     pylab.close()
     fig.clear()
     
@@ -387,10 +390,10 @@ def modBev_plot(ax, rangeX = [-10, 10 ], rangeXpx= [0, 400], numDeltaX = 5, rang
     xTicksLabels_val = np.linspace(rangeXpx[0], rangeXpx[1], numDeltaX)
     ax.set_xticks(xTicksLabels_val)
     xTicksLabels_val = np.linspace(rangeX[0], rangeX[1], numDeltaX)
-    zTicksLabels = map(lambda x: str(int(x)), xTicksLabels_val)
+    zTicksLabels = [str(int(x)) for x in xTicksLabels_val]
     ax.set_xticklabels(zTicksLabels,fontsize=fontSize)
     zTicksLabels_val = np.linspace(rangeZ[1],rangeZ[0], numDeltaZ)
-    zTicksLabels = map(lambda x: str(int(x)), zTicksLabels_val)
+    zTicksLabels = [str(int(x)) for x in zTicksLabels_val]
     ax.set_yticklabels(zTicksLabels,fontsize=fontSize)
     
  
